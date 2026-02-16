@@ -6,6 +6,7 @@
 const char* ssid = SSID;
 const char* password = PASSWORD;
 String serverUrl = SERVER_ENDPOINT;
+String pingUrl = PING_ENDPOINT;
 
 static constexpr const size_t record_number = 256;
 static constexpr const size_t record_length = 200;
@@ -15,7 +16,7 @@ static size_t rec_record_idx = 2;
 static size_t draw_record_idx = 0;
 static int16_t *rec_data;
 static int16_t cooldown = 0;
-const int16_t VOLUME_THRESHOLD = VOLUME_THRESHOLD;
+const int16_t volume_threshold = VOLUME_THRESHOLD;
 
 void setup() {
   Serial.begin(115200);
@@ -40,6 +41,14 @@ void setup() {
 
 void loop() {
   M5.update();
+  
+  
+  if (M5.BtnA.wasPressed()) 
+  {
+    HTTPClient http;
+    http.begin(pingUrl);
+    int httpResponseCode = http.GET();
+  }
   if (M5.Mic.isEnabled() && WiFi.status() == WL_CONNECTED)
   {
     HTTPClient http;
@@ -60,13 +69,13 @@ void loop() {
         cooldown--;
       }
       
-      if (peak_amplitude > VOLUME_THRESHOLD && cooldown <= 0) {
+      if (peak_amplitude > volume_threshold && cooldown <= 0) {
         Serial.printf("ALERT! Peak amplitude %d exceeds threshold %d. Sending HTTP POST to %s\n", 
-                      peak_amplitude, VOLUME_THRESHOLD, serverUrl.c_str());
+                      peak_amplitude, volume_threshold, serverUrl.c_str());
         cooldown = DELAY;
 
         HTTPClient http;
-        http.begin(serverUrl);
+        http.begin(pingUrl);
         int httpResponseCode = http.GET();
 
         if (httpResponseCode > 0) {
