@@ -48,6 +48,13 @@ void loop() {
     HTTPClient http;
     http.begin(pingUrl);
     int httpResponseCode = http.GET();
+
+    if (httpResponseCode > 0) {
+            Serial.printf("HTTP GET Ping successful. Response code: %d\n", httpResponseCode);
+        } else {
+            Serial.printf("Error sending HTTP GET. Code: %d, Error: %s\n", 
+                          httpResponseCode, http.errorToString(httpResponseCode).c_str());
+        }
   }
   if (M5.Mic.isEnabled() && WiFi.status() == WL_CONNECTED)
   {
@@ -67,21 +74,25 @@ void loop() {
       if (cooldown > 0)
       {
         cooldown--;
+        if (cooldown <= 0)
+        {
+          Serial.printf("Ready to listen!");
+        }
       }
       
       if (peak_amplitude > volume_threshold && cooldown <= 0) {
-        Serial.printf("ALERT! Peak amplitude %d exceeds threshold %d. Sending HTTP POST to %s\n", 
+        Serial.printf("ALERT! Peak amplitude %d exceeds threshold %d. Sending HTTP GET to %s\n", 
                       peak_amplitude, volume_threshold, serverUrl.c_str());
         cooldown = DELAY;
 
         HTTPClient http;
-        http.begin(pingUrl);
+        http.begin(serverUrl);
         int httpResponseCode = http.GET();
 
         if (httpResponseCode > 0) {
-            Serial.printf("HTTP POST successful. Response code: %d\n", httpResponseCode);
+            Serial.printf("HTTP GET successful. Response code: %d\n", httpResponseCode);
         } else {
-            Serial.printf("Error sending HTTP POST. Code: %d, Error: %s\n", 
+            Serial.printf("Error sending HTTP GET. Code: %d, Error: %s\n", 
                           httpResponseCode, http.errorToString(httpResponseCode).c_str());
         }
         http.end();
